@@ -1,0 +1,133 @@
+#!/bin/bash
+
+# Setup chroot env quickly
+# Jason Gerfen <jason.gerfen@gmail.com>
+
+# Setup networking
+echo "Setting up network..."
+mod=$(lsmod | grep e1000e)
+echo "${mod}" | awk '
+{
+ if ( $1 == "" ) {
+  system("cd e1000e-2.4.14/src/;make install;modprobe e1000e")
+
+  system("mv /etc/network/interfaces /etc/network/interfaces.old")
+
+  print "auto lo" >> "/etc/network/interfaces"
+  print "iface lo inet loopback" >> "/etc/network/interfaces"
+
+  print "auto eth0" >> "/etc/network/interfaces"
+  print "iface eth0 inet static" >> "/etc/network/interfaces"
+  print "    address 155.97.12.214" >> "/etc/network/interfaces"
+  print "    netmask 255.255.255.0" >> "/etc/network/interfaces"
+  print "    gateway 155.97.12.1" >> "/etc/network/interfaces"
+
+  print "search staff.library.utah.edu" >> "/etc/resolv.conf"
+  print "nameserver 155.101.201.10" >> "/etc/resolv.conf"
+  print "nameserver 155.101.115.10" >> "/etc/resolv.conf"
+
+  system("/etc/init.d/networking restart")
+ }
+}'
+echo "done"
+echo ""
+
+# Install lvm2 if missing
+echo "Checking for pre-requisites..."
+whereis pvcreate | awk '{ if ( $2 == "") { system("apt-get -yq install lvm2"); } }'
+whereis pvcreate | awk '{ if ( $2 == "") { print "LVM2 missing, cannot continue"; exit } }'
+echo "done"
+echo ""
+
+# Install mdadm if missing
+echo "Checking for pre-requisites..."
+whereis mdadm | awk '{ if ( $2 == "") { system("apt-get -yq install mdadm"); } }'
+whereis mdadm | awk '{ if ( $2 == "") { print "mdadm missing, cannot continue"; exit } }'
+mdadm --assemble /dev/md0
+echo "done"
+echo ""
+
+# Prompt for passphrase
+read -sp "Enter passphrase: " pass
+echo ""
+
+echo "Unlocking drives..."
+# Decrypt swap
+echo "${pass}" | cryptsetup luksOpen /dev/sde1 swap
+
+# Decrypt root
+echo "${pass}" | cryptsetup luksOpen /dev/sde5 root
+echo "done"
+echo ""
+
+# Decrypt vmx
+echo "${pass}" | cryptsetup luksOpen /dev/md0 vmx
+echo "done"
+echo ""
+
+# Create physical volume (vg_root)
+echo "Creating physical volume..."
+pvcreate /dev/mapper/root
+pvcreate /dev/mapper/vmx
+pvscan
+echo "done"
+echo ""
+
+# Assign physical volume to volume group (vg_root)
+echo "Creating volume group..."
+vgcreate vg_root /dev/mapper/root
+vgextend vg_root /dev/mapper/vmx
+vgscan
+echo "done"
+echo ""
+
+# Create logical volume within volume group
+echo "Creating logical volumes..."
+lvcreate -n lv_root -L 50G vg_root
+lvcreate -n lv_usr -L 50G vg_root
+lvcreate -n lv_tmp -L 10G vg_root
+lvcreate -n lv_home -l 100%FREE vg_root
+lvcreate -n lv_vmx -l 100%FREE vg_root
+lvscan
+echo "done"
+echo ""
+
+# Create chroot env
+echo "Creating chroot env..."
+mkdir /local/
+mount /dev/vg_root/lv_root /local/
+mount /dev/sdf1 /local/boot
+mount /dev/vg_root/lv_usr /local/usr/local
+mount /dev/vg_root/lv_tmp /local/tmp
+mount /dev/vg_root/lv_home /local/home
+mount /dev/vg_root/lv_vmx /local/vmx
+mount -t proc none /local/proc
+mount -o bind /dev /local/dev
+mount -o bind /sys /local/sys
+echo "done"
+
+# Enter chroot env
+echo "Entering chroot env..."
+chroot /local/ /bin/bash
+
+# Clean up
+echo "Cleaning up..."
+
+# Unmount all logical volumes
+umount /local/sys
+umount /local/dev
+umount /local/proc
+umount /local/home
+umount /local/vmx
+umount /local/tmp
+umount /local/usr/local
+umount /local/boot
+umount /local/
+
+# Lock drives
+cryptsetup luksClose /dev/mapper/vmx
+cryptsetup luksClose /dev/mapper/swap
+cryptsetup luksClose /dev/mapper/root
+
+# Remove folder
+rm -fr /local/
