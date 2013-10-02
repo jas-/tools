@@ -42,7 +42,10 @@ of qemu based virtual machines.
 
 ###Create new VM
 Here is how you can create a new VM. Requires a
-valid ISO file within the ISO folder.
+valid ISO file within the ISO folder. It will create
+a new .iso within the VM folder & launch a QEMU
+instance running the ISO you specified for a new
+guest OS instllation.
 
 ```shell
 %> ./launcher install <name-of-vm> <path/to/iso>
