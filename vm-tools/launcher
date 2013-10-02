@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# VM launcher
+# Jason Gerfen <jason.gerfen@gmail.com>
+
+# Create new if asked
+if [ "$1" == "install" ]; then
+ if [ -f "$3" ]; then
+  dd if=/dev/zero of=vm/$2 bs=516096 seek=9182 count=0
+  qemu-system-x86_64 -m 2048 -boot d -cdrom $3 vm/$2 -net nic -net user
+  
+  exit
+ fi
+fi
+
+# Prompt for action
+PS3="Select VM to load or 'q' to quit: "
+
+# Get list of VM's
+vmList=$(find vm/*.iso -type f)
+
+# Load existing based on user input
+select vmName in $vmList; do
+ if [ -n "${vmName}" ]; then
+  qemu-system-x86_64 -m 1024 ${vmName} -net nic -net user -redir tcp:2222::22 -redir tcp:8080::80 -redir tcp:4343::443 -vnc 127.0.0.1:1 -daemonize
+ fi
+ break
+done
+exit

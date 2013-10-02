@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# Setup chroot env quickly
+# Jason Gerfen <jason.gerfen@gmail.com>
+
+# Install lvm2 if missing
+echo "Checking for pre-requisites (requires internet connection)..."
+whereis pvcreate | awk '{ if ( $2 == "") { system("apt-get -yq install lvm2"); } }'
+whereis pvcreate | awk '{ if ( $2 == "") { print "LVM2 missing, cannot continue"; exit(0) } }'
+echo "done"
+echo ""
+
+# Prompt for passphrase
+read -sp "Enter passphrase: " pass
+echo ""
+
+echo "Unlocking drives..."
+# Decrypt swap
+echo "${pass}" | cryptsetup luksOpen /dev/sda1 swap
+
+# Decrypt root
+echo "${pass}" | cryptsetup luksOpen /dev/sda5 root
+echo "done"
+echo ""
+
+# Create physical volume (vg_root)
+echo "Creating physical volume..."
+#pvcreate /dev/mapper/root
+pvscan
+echo "done"
+echo ""
+
+# Assign physical volume to volume group (vg_root)
+echo "Creating volume group..."
+#vgcreate vg_root /dev/mapper/root
+vgscan
+echo "done"
+echo ""
+
+# Create logical volume within volume group
+echo "Creating logical volumes..."
+#lvcreate -n lv_root -L 50G vg_root
+#lvcreate -n lv_usr -L 30G vg_root
+#lvcreate -n lv_tmp -L 10G vg_root
+#lvcreate -n lv_vmx -L 100G vg_root
+#lvcreate -n lv_home -l 100%FREE vg_root
+lvscan
+echo "done"
+echo ""
+
+# Create chroot env
+echo "Creating chroot env..."
+mkdir local/
+mount /dev/vg_root/lv_root local/
+mount /dev/sdb1 local/boot
+mount /dev/vg_root/lv_usr local/usr/local
+mount /dev/vg_root/lv_tmp local/tmp
+mount /dev/vg_root/lv_vmx local/vmx
+mount /dev/vg_root/lv_home local/home
+mount -t proc none local/proc
+mount -o bind /dev local/dev
+mount -o bind /sys local/sys
+echo "done"
+
+# Enter chroot env
+echo "Entering chroot env..."
+chroot local/ /bin/bash
+
+# Clean up
+echo "Cleaning up..."
+
+# Unmount all logical volumes
+umount local/sys
+umount local/dev
+umount local/proc
+umount local/home
+umount local/vmx
+umount local/tmp
+umount local/usr/local
+umount local/boot
+umount local/
