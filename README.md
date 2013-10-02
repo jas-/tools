@@ -1,7 +1,7 @@
 #tools
 
-A series of configuration files, scripts etc to help me
-manage complex systems.
+A series of configuration files, scripts & tools to help me
+manage multiple & complex systems.
 
 ##configs
 Here be configuration files for tuning network options,
