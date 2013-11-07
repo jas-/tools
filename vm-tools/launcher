@@ -8,7 +8,6 @@ if [ "$1" == "install" ]; then
  if [ -f "$3" ]; then
   dd if=/dev/zero of=vm/$2 bs=516096 seek=9182 count=0
   qemu-system-x86_64 -m 2048 -boot d -cdrom $3 vm/$2 -net nic -net user
-  
   exit
  fi
 fi
@@ -22,7 +21,13 @@ vmList=$(find vm/*.iso -type f)
 # Load existing based on user input
 select vmName in $vmList; do
  if [ -n "${vmName}" ]; then
-  qemu-system-x86_64 -m 1024 ${vmName} -net nic -net user -redir tcp:2222::22 -redir tcp:8080::80 -redir tcp:4343::443 -vnc 127.0.0.1:1 -daemonize
+  ssh=$(ps xaf | grep qemu-system-x86_64 | awk '{ split($14, a, ":"); ssh=a[2]+1  } END { print ssh}')
+  http=$(ps xaf | grep qemu-system-x86_64 | awk '{ split($16, a, ":"); http=a[2]+1  } END { print http}')
+  https=$(ps xaf | grep qemu-system-x86_64 | awk '{ split($18, a, ":"); https=a[2]+1  } END { print https}')
+  n1=$(ps xaf | grep qemu-system-x86_64 | awk '{ split($20, a, ":"); n1=a[2]+1  } END { print n1}')
+  n2=$(ps xaf | grep qemu-system-x86_64 | awk '{ split($22, a, ":"); n2=a[2]+1  } END { print n2}')
+  vnc=$(ps xaf | grep qemu-system-x86_64 | awk '{ split($24, a, ":"); vnc=a[2]+1  } END { print vnc}')
+  qemu-system-x86_64 -m 1024 ${vmName} -net nic -net user -redir tcp:${ssh}::22 -redir tcp:${http}::80 -redir tcp:${https}::443 -redir tcp:${n1}::3000 -redir tcp:${n2}::8000 -vnc 127.0.0.1:${vnc} -daemonize
  fi
  break
 done
