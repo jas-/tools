@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Some examples are below and can be simply uncommented for use
+
+echo $HOSTNAME
+echo "========================"
+
+# Search logs for IP's and pass through a DNS lookup
+echo "Finding IPV4 addresses from logs..."
+grep -REoah "([0-9]{1,3}\.){3}[0-9]{1,3}" /var/log/* | sort | uniq | grep -vE "155\..*|0\.0\.0\.0|127\.0\.0\.1|169\..*" | awk '{ print $1": "system("host "$1) }' > /tmp/${HOSTNAME}.access-log
+
+echo "========================"

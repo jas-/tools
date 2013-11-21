@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Some examples are below and can be simply uncommented for use
+
+echo $HOSTNAME
+echo "========================"
+
+# Pattern match replace for PAM authentication misconfiguration (allowing all GX & GP accounts)
+sed -i 's/auth            requisite       pam_lockout.so user=^gp*/#auth            requisite       pam_lockout.so user=^gp*/' /etc/pam.d/system-auth
+cat /etc/pam.d/system-auth | grep pam_lockout
+
+echo "========================"

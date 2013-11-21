@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Some examples are below and can be simply uncommented for use
+
+echo $HOSTNAME
+echo "========================"
+
+# Fix GLSA vulnerabilities
+glsa-check -f affected
+
+echo "========================"

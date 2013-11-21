@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Some examples are below and can be simply uncommented for use
+
+echo $HOSTNAME
+echo "========================"
+
+# Fix cleanup regex to account for user accounts with space preceding username
+sed -i 's/$_ =~ m/^\S+\s+\d+\s+\w+\s+\w+\s+\d+\s+(\d{4})-(\d{2})-(\d{2})\s+\d{2}:\d{2}\s+\/home\/(\w+)$/x;/$_ =~ m/^\S+\s+\d+\s+\w+\s+\w+\s+\d+\s+(\d{4})-(\d{2})-(\d{2})\s+\d{2}:\d{2}\s+\/home\/\s?(\w+)$/x;/g' /usr/local/scripts/cleanup.pl
+
+echo "========================"

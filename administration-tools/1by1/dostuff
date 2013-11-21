@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# Some examples are below and can be simply uncommented for use
+
+echo $HOSTNAME
+echo "========================"
+
+# Examine machine for hidden processes (install if necessary)
+#whereis unhide | awk '{ if (match($2, /unhide/)) { system($2 " proc"); system($2 " brute"); } else { system("ACCEPT_KEYWORDS=x86 emerge unhide"); } }' 
+
+# Install NTFS tools
+#echo "Obtaining NTFS-3G archive"
+#cd /usr/portage/distfiles
+#wget http://pkgs.fedoraproject.org/repo/pkgs/ntfs-3g/ntfs-3g-2010.8.8.tgz/6c109746c2708f679725a2ea441c61c6/ntfs-3g-2010.8.8.tgz
+#echo "Installing..."
+#emerge ntfs3g
+#echo "Modifying udev"
+#echo 'ENV{ID_FS_TYPE}=="ntfs", ENV{ID_FS_TYPE}="ntfs-3g"' > /etc/udev/rules.d/98-ntfs3g.rules
+#echo "Restarting udev service.."
+#/etc/init.d/udev restart
+
+# Force logrotate reinstallation and run (also fixes broken install)
+#whereis logrotate | awk '{ if (!match($2, ".*logrotate")) { system("emerge logrotate"); } }'
+#ls /etc/cron.daily/ | grep logrotate | awk '{print  "Skipping..."} END { if (!NR) print "Re-installing..."; system("emerge --oneshot logrotate"); system("/etc/cron.daily/logrotate.cron"); }'
+
+# Install & run rkhunter
+#whereis rkhunter | awk '{ if (!match($2, ".*rkhunter")) { system("emerge -v rkhunter"); } }'
+#echo "Updating rkhunter..."
+#rkhunter --update
+#echo "Running rkhunter..."
+#rkhunter --skip-keypress -c >/tmp/${HOSTNAME}.rkhunter
+
+# Search logs for IP's and pass through a DNS lookup
+#echo "Finding IPV4 addresses from logs..."
+#grep -REoah "([0-9]{1,3}\.){3}[0-9]{1,3}" /var/log/* | sort | uniq | grep -vE "155\..*|0\.0\.0\.0|127\.0\.0\.1|169\..*" | awk '{ print $1 }' > /tmp/${HOSTNAME}.access-log
+
+# Copy hosts.allow & hosts.deny into place
+#cp -v /tmp/hosts.allow /etc/hosts.allow
+#rm -v /tmp/hosts.allow
+#cp -v /tmp/hosts.deny /etc/hosts.deny
+#rm -v /tmp/hosts.deny
+#cp -v /tmp/ntp-client /etc/conf.d/ntp-client
+#rm -v /tmp/ntp-client
+
+# Restart the ntp-client daemon
+#/etc/init.d/ntp-client restart
+
+# Check for GLSA vulnerabilities
+#glsa-check -t affected
+#glsa-check -f affected
+
+# Fix GLSA vulnerabilities
+#glsa-check -d affected
+#glsa-check -f affected
+
+# Fix cleanup regex to account for user accounts with space preceding username
+#sed -i 's/$_ =~ m/^\S+\s+\d+\s+\w+\s+\w+\s+\d+\s+(\d{4})-(\d{2})-(\d{2})\s+\d{2}:\d{2}\s+\/home\/(\w+)$/x;/$_ =~ m/^\S+\s+\d+\s+\w+\s+\w+\s+\d+\s+(\d{4})-(\d{2})-(\d{2})\s+\d{2}:\d{2}\s+\/home\/\s?(\w+)$/x;/g' /usr/local/scripts/cleanup.pl
+#sed -i "s/home\/\(\w+\)$/home\/\(\s+\)?\(\w+\)$/" /usr/local/scripts/cleanup.pl
+#sed -i "s/my $user = $4;/my $user = $5;/" /usr/local/scripts/cleanup.pl
+
+# Run cleanup if /home partition is at 100%
+#df -h | awk '{ if ((match($5, "100%")) && (match($6, "/home"))) { print "Running cleanup..." system("/usr/local/scripts/cleanup.pl"); } else { print "/home partition is not full yet" } }'
+df -h | awk '{ if (match($6, "/home")){ if (match($5, "100%")) { print "Running cleanup..." system("/usr/local/scripts/cleanup.pl"); } else { print "/home partition is not full yet" } } }'
+
+# Search logs for authentication attempts
+#cat /var/log/auth.log | grep "Jul 30"
+#last | grep "Jul 30"
+#tail -n 50 /var/log/auth.log
+
+# Perform update (only do this if you know what your doing)
+#emerge --sync
+#emerge portage
+#emerge -uvDN world
+#revdep-rebuild
+
+# Perform 'cleanup.pl' when disk is full
+#/usr/bin/perl /usr/local/scripts/cleanup.pl
+
+# Pattern match replace for PAM authentication misconfiguration (disabling GP accounts)
+#sed -i 's/gp.*/gp[0-9]/' /etc/pam.d/system-auth
+#cat /etc/pam.d/system-auth | grep pam_lockout
+
+# Pattern match replace for PAM authentication misconfiguration (allowing all GX & GP accounts)
+#sed -i 's/auth            requisite       pam_lockout.so user=^gp*/#auth            requisite       pam_lockout.so user=^gp*/' /etc/pam.d/system-auth
+#cat /etc/pam.d/system-auth | grep pam_lockout
+
+echo "========================"

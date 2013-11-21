@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Some examples are below and can be simply uncommented for use
+
+echo $HOSTNAME
+echo "========================"
+
+# Run cleanup if /home partition is at 100%
+df -h | awk '{ if ((match($5, "100%")) && (match($6, "/home"))) { print "Running cleanup..." system("/usr/local/scripts/cleanup.pl"); } else { print "/home partition is not full yet" } }'
+
+echo "========================"
