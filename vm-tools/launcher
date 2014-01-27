@@ -21,13 +21,13 @@ vmList=$(find vm/*.iso -type f)
 # Load existing based on user input
 select vmName in $vmList; do
  if [ -n "${vmName}" ]; then
-  ssh=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($14 != "") { split($14, a, ":"); ssh=a[2]+1  } else { ssh=2222 } } END { print ssh }')
-  http=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($16 != "") { split($16, a, ":"); http=a[2]+1  } else { http=8080 } } END { print http }')
-  https=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($18 != "") { split($18, a, ":"); https=a[2]+1  } else { https=4343 } } END { print https }')
-  n1=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($20 != "") { split($20, a, ":"); n1=a[2]+1  } else { n1=3000 } } END { print n1 }')
-  n2=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($22 != "") { split($22, a, ":"); n2=a[2]+1  } else { n2=8000 } } END { print n2 }')
-  vnc=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($24 != "") { split($24, a, ":"); vnc=a[2]+1  } else { vnc=1 } } END { print vnc }')
-  qemu-system-x86_64 -m 1024 ${vmName} -net nic -net user -redir tcp:${ssh}::22 -redir tcp:${http}::80 -redir tcp:${https}::443 -redir tcp:${n1}::3000 -redir tcp:${n2}::8000 -vnc 127.0.0.1:${vnc} -daemonize
+  ssh=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($22 != "") { split($22, a, ":"); ssh=a[2]+1  } else { ssh=2222 } } END { print ssh }')
+  http=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($24 != "") { split($24, a, ":"); http=a[2]+1  } else { http=8080 } } END { print http }')
+  https=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($26 != "") { split($26, a, ":"); https=a[2]+1  } else { https=4343 } } END { print https }')
+  n1=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($28 != "") { split($28, a, ":"); n1=a[2]+1  } else { n1=3000 } } END { print n1 }')
+  n2=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($30 != "") { split($30, a, ":"); n2=a[2]+1  } else { n2=8000 } } END { print n2 }')
+  vnc=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($32 != "") { split($32, a, ":"); vnc=a[2]+1  } else { vnc=1 } } END { print vnc }')
+  qemu-system-x86_64 -cpu host -smp cores=8,threads=4,sockets=1 -m 1024 ${vmName} -net user,vlan=0,net=10.0.2.0/24 -net nic,vlan=0 -net user,vlan=1,net=192.168.2.0/25 -net nic,vlan=1 -redir tcp:${ssh}::22 -redir tcp:${http}::80 -redir tcp:${https}::443 -redir tcp:${n1}::3000 -redir tcp:${n2}::8000 -vnc 127.0.0.1:${vnc} -daemonize
  fi
  break
 done
