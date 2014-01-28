@@ -1,0 +1,4 @@
+#!/bin/bash
+
+qemu-system-x86_64 -m 2048 -boot d -cdrom iso/smartos-latest.iso vm/smartos.iso -net user,vlan=0,net=192.168.2.0/25 -net nic,vlan=0 -net user,vlan=1,net=10.0.2.0/24 -net nic,vlan=1 -drive file=vm/smartos-1.iso -drive file=vm/smartos-2.iso & #-drive file=vm/smartos-3.iso -drive file=vm/smartos-4.iso &
+#qemu-system-x86_64 -cpu host -smp cores=4,threads=2,sockets=1 -m 2048 -boot d -cdrom iso/smartos-latest.iso vm/smartos.iso -net user,vlan=0,net=192.168.2.0/25 -net nic,vlan=0 -net user,vlan=1,net=10.0.2.0/24 -net nic,vlan=1 -drive file=vm/smartos-1.iso -drive file=vm/smartos-2.iso & #-drive file=vm/smartos-3.iso -drive file=vm/smartos-4.iso &
