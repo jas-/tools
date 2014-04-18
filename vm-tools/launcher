@@ -23,9 +23,7 @@ select vmName in $vmList; do
  if [ -n "${vmName}" ]; then
   if [ "$1" == "advanced" ]; then
    ssh=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($22 != "") { split($22, a, ":"); ssh=a[2]+1  } else { ssh=2222 } } END { print ssh }')
-echo $(ps xaf | grep qemu-system-x86_64 | awk '{ if ($22 != "") { split($22, a, ":"); ssh=a[2]+1  } else { ssh=2222 } } END { print ssh }')
    http=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($24 != "") { split($24, a, ":"); http=a[2]+1  } else { http=8080 } } END { print http }')
-echo $(ps xaf | grep qemu-system-x86_64 | awk '{ if ($24 != "") { split($24, a, ":"); http=a[2]+1  } else { http=8080 } } END { print http }')
    https=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($26 != "") { split($26, a, ":"); https=a[2]+1  } else { https=4343 } } END { print https }')
    n1=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($28 != "") { split($28, a, ":"); n1=a[2]+1  } else { n1=3000 } } END { print n1 }')
    n2=$(ps xaf | grep qemu-system-x86_64 | awk '{ if ($30 != "") { split($30, a, ":"); n2=a[2]+1  } else { n2=8000 } } END { print n2 }')
